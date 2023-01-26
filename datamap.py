@@ -26,6 +26,17 @@ class DataMap:
             print("lookup table set: " + str(self.is_lookup_table))
         if self.is_lookup_table and self.is_travel_time:
             print("ERROR: Invalid desingation of travel time and lookup table. Map invalid")
+
+    #def __init__(self, list_map, xllcorner, yllcorner, cellsize, NODATA_VALUE, travel_time, lookup_table):
+    #    self.stored_map = np.array(list_map)
+    #    self.nrows = len(self.stored_map)
+    #    self.ncols = len(self.stored_map[0])
+    #    self.xllcorner = xllcorner
+    #    self.yllcorner = yllcorner
+    #    self.cellsize = cellsize
+    #    self.NODATA_VALUE = NODATA_VALUE
+    #    self.is_travel_time = travel_time
+    #    self.is_lookup_table = lookup_table
     
     def parse_csv(self, file_path):
         #   load file to stored_map
@@ -41,8 +52,11 @@ class DataMap:
             self.NODATA_VALUE = self.stored_map[5][1]
             #   Slice stored_map to get rid of extra parameter data
             self.stored_map = self.stored_map[6:]
+            self.successfully_created = True
         #print("ncols: " + ncols + "\nnrows: " + nrows + "\nxllcorner: " + xllcorner + "\nyllcorner: " + yllcorner + "\ncellsize: " + cellsize + "\nNODATA_VALUE: " + NODATA_VALUE)
 
+    def get_value(self, xcoord, ycoord):
+        return self.stored_map[xcoord, ycoord]
         
 
     def __str__(self):
