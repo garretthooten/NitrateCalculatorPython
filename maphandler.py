@@ -27,18 +27,18 @@ class MapHandler:
         for arg in args_to_get:
             if arg in kwargs:
                 if arg == "travel_time":
-                    self.constant_maps[arg] = datamap.DataMap(kwargs.get(arg), travel_time = True)
+                    self.constant_maps[arg] = datamap.DataMap(file_path = kwargs.get(arg), travel_time = True)
                 elif arg == "lookup_table":
-                    self.constant_maps[arg] = datamap.DataMap(kwargs.get(arg), lookup_table = True)
+                    self.constant_maps[arg] = datamap.DataMap(file_path = kwargs.get(arg), lookup_table = True)
                 else:
-                    self.constant_maps[arg] = datamap.DataMap(kwargs.get(arg))
+                    self.constant_maps[arg] = datamap.DataMap(file_path = kwargs.get(arg))
         
     #   Call at any time to load or reload crop maps
     def load_crop_maps(self, crop_directories):
         for directory in crop_directories:
                 year = "".join(filter(str.isdigit, directory))
                 year = int(year)
-                self.crop_maps[year] = datamap.DataMap(directory)
+                self.crop_maps[year] = datamap.DataMap(file_path = directory)
                 print("ncols for " + str(year) + " is " + str(self.crop_maps[year].ncols))
 
     #   Step 1: Find smallest map in the set based on total land covered
@@ -54,7 +54,12 @@ class MapHandler:
         smallest_map = self.constant_maps["travel_time"]
         smallest_area = self.get_land_covered(smallest_map)
 
-        for key, map in ({**self.constant_maps, **self.crop_maps}).values:
+        for key, value in (self.constant_maps.items()):
+            if not key == "lookup_table":    
+                if self.get_land_covered(value) < smallest_area:
+                    smallest_area = self.get_land_covered(value)
+                    smallest_map = value
+        for key, map in (self.crop_maps.items()):
             if not key == "lookup_table":    
                 if self.get_land_covered(map) < smallest_area:
                     smallest_area = self.get_land_covered(map)
@@ -63,23 +68,23 @@ class MapHandler:
 
     #   Step 2: Make all maps start at same coordinates
     def get_same_coords(self, smallest_map, maps_to_shrink):
-        print("Entering get_same_coords")
         try:
             for map in maps_to_shrink:
+                calc_map = maps_to_shrink[map]
                 if not map == self.constant_maps["lookup_table"]:
-                    if smallest_map.xllcorner > map.xllcorner and smallest_map.yllcorner > map.yllcorner:
-                        units = map.cellsize / smallest_map.cellsize
+                    if smallest_map.xllcorner > maps_to_shrink[map].xllcorner and smallest_map.yllcorner > maps_to_shrink[map].yllcorner:
+                        units = maps_to_shrink[map].cellsize / smallest_map.cellsize
                         new_map = []
-                        starting_x = (smallest_map.xllcorner - map.xllcorner) / map.cellsize
-                        starting_y = (smallest_map.yllcorner - map.yllcorner) / map.cellsize
+                        starting_x = (smallest_map.xllcorner - maps_to_shrink[map].xllcorner) / maps_to_shrink[map].cellsize
+                        starting_y = (smallest_map.yllcorner - maps_to_shrink[map].yllcorner) / maps_to_shrink[map].cellsize
 
-                        for i in range(starting_x, map.nrows):
+                        for i in range(starting_x, maps_to_shrink[map].nrows):
                             temp_row = []
-                            for j in range(starting_y, map.ncols):
+                            for j in range(starting_y, maps_to_shrink[map].ncols):
                                 temp_row.append(map.get_value[i, j])
                             new_map.append(temp_row)
-                        map = datamap.DataMap(new_map, smallest_map.xllcorner, smallest_map.yllcorner, map.cellsize, map.NODATA_VALUE, map.is_travel_time, map.is_lookup_table)
-                    elif smallest_map.xllcorner == map.xllcorner and smallest_map.yllcorner == map.yllcorner:
+                        maps_to_shrink[map] = datamap.DataMap(new_map, smallest_map.xllcorner, smallest_map.yllcorner, maps_to_shrink[map].cellsize, maps_to_shrink[map].NODATA_VALUE, maps_to_shrink[map].is_travel_time, maps_to_shrink[map].is_lookup_table)
+                    elif smallest_map.xllcorner == maps_to_shrink[map].xllcorner and smallest_map.yllcorner == maps_to_shrink[map].yllcorner:
                         print("Maps already at same coordinates, skipping")
         except Exception as exc:
             print("Error in get_same_coords:")
@@ -87,9 +92,9 @@ class MapHandler:
             print(exc)
 
     #   Gets the average of a cell when the cellsize between two maps is different.
-    def get_adj_cell(map1, map2, i, j):
-        units = map2.cellsize / map1.cellsize
-        return map2.stored_map[i / units][j / units]
+    def get_adj_cell(self, map1, map2, i, j):
+        units = int(map2.cellsize) / int(map1.cellsize)
+        return map2.stored_map[int(i / units)][int(j / units)]
 
 
     #   Step 3: Find smallest map of new adjusted set. In the python version the maps are adjusted in place...
@@ -103,7 +108,8 @@ class MapHandler:
 
         #   Step 1: Find smallest map.
         smallest_map = self.find_smallest_map()
-        print("Found smallest map")
+        print("Found smallest map: " + str(type(smallest_map)))
+        print(smallest_map.xllcorner)
 
         #   Step 2: Make all maps begin at the smallest coordinates.
         self.get_same_coords(smallest_map, self.constant_maps)
@@ -118,8 +124,8 @@ class MapHandler:
         sum_of_volume = 0
         return_map = []
 
-        tt_units = self.constant_maps["travel_time"].cellsize / smallest_map.cellsize
-        recharge_units = self.constant_maps["recharge_in"].cellsize / smallest_map.cellsize
+        tt_units = float(self.constant_maps["travel_time"].cellsize) / float(smallest_map.cellsize)
+        recharge_units = float(self.constant_maps["recharge_in"].cellsize) / float(smallest_map.cellsize)
 
         for i in range(len(smallest_map.stored_map)):
             inside_temp = []

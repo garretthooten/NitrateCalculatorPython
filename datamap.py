@@ -15,9 +15,20 @@ class DataMap:
     is_travel_time = False
     is_lookup_table = False
 
-    def __init__(self, file_path, **kwargs):
-        self.directory = file_path
-        self.parse_csv(file_path)
+    def __init__(self, **kwargs):
+        if "file_path" in kwargs:
+            self.directory = kwargs.get("file_path")
+            self.parse_csv(self.directory)
+        #   If the map is loaded by stored_map, all other class parameters must be included.
+        #   Thus, no checking is necessary (For this really fast implementation)
+        elif "stored_map" in kwargs:
+            self.stored_map = np.array(kwargs.get("stored_map"))
+            self.ncols = kwargs.get("ncols")
+            self.nrows = kwargs.get("nrows")
+            self.xllcorner = kwargs.get("xllcorner")
+            self.yllcorner = kwargs.get("yllcorner")
+            self.cellsize = kwargs.get("cellsize")
+            self.NODATA_VALUE = kwargs.get("NODATA_VALUE")
         if "travel_time" in kwargs:
             self.is_travel_time = kwargs.get("travel_time")
             print("travel time set: " + str(self.is_travel_time))
@@ -26,17 +37,6 @@ class DataMap:
             print("lookup table set: " + str(self.is_lookup_table))
         if self.is_lookup_table and self.is_travel_time:
             print("ERROR: Invalid desingation of travel time and lookup table. Map invalid")
-
-    #def __init__(self, list_map, xllcorner, yllcorner, cellsize, NODATA_VALUE, travel_time, lookup_table):
-    #    self.stored_map = np.array(list_map)
-    #    self.nrows = len(self.stored_map)
-    #    self.ncols = len(self.stored_map[0])
-    #    self.xllcorner = xllcorner
-    #    self.yllcorner = yllcorner
-    #    self.cellsize = cellsize
-    #    self.NODATA_VALUE = NODATA_VALUE
-    #    self.is_travel_time = travel_time
-    #    self.is_lookup_table = lookup_table
     
     def parse_csv(self, file_path):
         #   load file to stored_map
@@ -56,7 +56,7 @@ class DataMap:
         #print("ncols: " + ncols + "\nnrows: " + nrows + "\nxllcorner: " + xllcorner + "\nyllcorner: " + yllcorner + "\ncellsize: " + cellsize + "\nNODATA_VALUE: " + NODATA_VALUE)
 
     def get_value(self, xcoord, ycoord):
-        return self.stored_map[xcoord, ycoord]
+        return self.stored_map[xcoord][ycoord]
         
 
     def __str__(self):
