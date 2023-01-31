@@ -39,7 +39,7 @@ class MapHandler:
                 year = "".join(filter(str.isdigit, directory))
                 year = int(year)
                 self.crop_maps[year] = datamap.DataMap(file_path = directory)
-                print("ncols for " + str(year) + " is " + str(self.crop_maps[year].ncols))
+                #print("ncols for " + str(year) + " is " + str(self.crop_maps[year].ncols))
 
     #   Step 1: Find smallest map in the set based on total land covered
     #   get_land_covered returns the area of a given datamap.
@@ -68,15 +68,16 @@ class MapHandler:
 
     #   Step 2: Make all maps start at same coordinates
     def get_same_coords(self, smallest_map, maps_to_shrink):
+        print("Entering get_same_coords")
         try:
             for map in maps_to_shrink:
                 calc_map = maps_to_shrink[map]
                 if not map == self.constant_maps["lookup_table"]:
-                    if smallest_map.xllcorner > maps_to_shrink[map].xllcorner and smallest_map.yllcorner > maps_to_shrink[map].yllcorner:
-                        units = maps_to_shrink[map].cellsize / smallest_map.cellsize
+                    if float(smallest_map.xllcorner) > float(maps_to_shrink[map].xllcorner) and float(smallest_map.yllcorner) > float(maps_to_shrink[map].yllcorner):
+                        units = float(maps_to_shrink[map].cellsize) / float(smallest_map.cellsize)
                         new_map = []
-                        starting_x = (smallest_map.xllcorner - maps_to_shrink[map].xllcorner) / maps_to_shrink[map].cellsize
-                        starting_y = (smallest_map.yllcorner - maps_to_shrink[map].yllcorner) / maps_to_shrink[map].cellsize
+                        starting_x = (float(smallest_map.xllcorner) - float(maps_to_shrink[map].xllcorner)) / int(maps_to_shrink[map].cellsize)
+                        starting_y = (float(smallest_map.yllcorner) - float(maps_to_shrink[map].yllcorner)) / int(maps_to_shrink[map].cellsize)
 
                         for i in range(starting_x, maps_to_shrink[map].nrows):
                             temp_row = []
@@ -89,7 +90,7 @@ class MapHandler:
         except Exception as exc:
             print("Error in get_same_coords:")
             print(type(exc))
-            print(exc)
+            print(exc.args)
 
     #   Gets the average of a cell when the cellsize between two maps is different.
     def get_adj_cell(self, map1, map2, i, j):
@@ -108,8 +109,8 @@ class MapHandler:
 
         #   Step 1: Find smallest map.
         smallest_map = self.find_smallest_map()
-        print("Found smallest map: " + str(type(smallest_map)))
-        print(smallest_map.xllcorner)
+        #print("Found smallest map: " + str(type(smallest_map)))
+        #print(smallest_map.xllcorner)
 
         #   Step 2: Make all maps begin at the smallest coordinates.
         self.get_same_coords(smallest_map, self.constant_maps)
@@ -171,12 +172,6 @@ class MapHandler:
 
                     else:
                         inside_temp.append(smallest_map.NODATA_VALUE)
-                        print("Rejected [" + str(i) + "][" + str(j) + "]")
-
-                    if i == 257 and j == 60:
-                        print("rejecting cell [" + str(i) + "][" + str(j) + "]: crop_value - " + str(crop_value) + ", lookup_value - " + str(lookup_value) + ", current_recharge_cell - " + str(current_recharge_cell))
-                        print("(not crop_value == self.crop_maps[access].NODATA_VALUE): " + str((not crop_value == self.crop_maps[access].NODATA_VALUE)) + "\n(not lookup_value == self.crop_maps[access].NODATA_VALUE): " + str((not lookup_value == self.crop_maps[access].NODATA_VALUE)) + "\n(not current_recharge_cell == self.constant_maps[recharge_in].NODATA_VALUE): " + str((not current_recharge_cell == self.constant_maps["recharge_in"].NODATA_VALUE)))
-                        print("self.crops_maps[access].NODATA_VALUE: " + str(self.crop_maps[access].NODATA_VALUE) + ", type: " + str(type(self.crop_maps[access].NODATA_VALUE)) + ", lookup_value type: " + str(type(lookup_value)))
 
                 else:
                     inside_temp.append(smallest_map.NODATA_VALUE)

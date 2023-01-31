@@ -28,10 +28,10 @@ class DataMap:
             self.NODATA_VALUE = kwargs.get("NODATA_VALUE")
         if "travel_time" in kwargs:
             self.is_travel_time = kwargs.get("travel_time")
-            print("travel time set: " + str(self.is_travel_time))
+            #print("travel time set: " + str(self.is_travel_time))
         if "lookup_table" in kwargs:
             self.is_lookup_table = kwargs.get("lookup_table")
-            print("lookup table set: " + str(self.is_lookup_table))
+            #print("lookup table set: " + str(self.is_lookup_table))
         if self.is_lookup_table and self.is_travel_time:
             print("ERROR: Invalid desingation of travel time and lookup table. Map invalid")
         if "file_path" in kwargs and self.stored_map == None:
