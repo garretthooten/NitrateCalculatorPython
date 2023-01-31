@@ -127,24 +127,39 @@ class MapHandler:
         tt_units = float(self.constant_maps["travel_time"].cellsize) / float(smallest_map.cellsize)
         recharge_units = float(self.constant_maps["recharge_in"].cellsize) / float(smallest_map.cellsize)
 
+        #   Delete this later
+        temp_values_found = 0
+        crop_values_found = 0
+
         for i in range(len(smallest_map.stored_map)):
             inside_temp = []
             for j in range(len(smallest_map.stored_map[i])):
                 temp = self.constant_maps["travel_time"].get_value(i,j)
+                if not temp == self.constant_maps["travel_time"].NODATA_VALUE:
+                    temp_values_found = temp_values_found + 1
 
                 if not temp == self.constant_maps["travel_time"].NODATA_VALUE:
                     access = int(year) - int(temp)
                     crop_value = self.crop_maps[access].get_value(i,j)
-
-                    if not crop_value in self.constant_maps["lookup_table"].stored_map:
-                        crop_value = self.crop_maps[access].NODATA_VALUE
                     
-                    current_recharge_cell = self.get_adj_cell(smallest_map, self.constant_maps["recharge_in"], i, j)
+                    #   If the crop value isn't null, get the lookup table value for the crop.
+                    if(not crop_value == self.crop_maps[access].NODATA_VALUE):
+                        lookup_value = self.constant_maps["lookup_table"].get_value(int(crop_value), 2)
+                        crop_values_found = crop_values_found + 1
+                    #   Else, set the lookup value to the crop map's null value for comparison later.
+                    else:
+                        lookup_value = self.crop_maps[access].NODATA_VALUE
 
-                    if ((not crop_value == self.crop_maps[access].NODATA_VALUE) and (self.constant_maps["lookup_table"].stored_map[crop_value].size == 3) and (not current_recharge_cell == self.constant_maps["recharge_in"].NODATA_VALUE)):
-                        area = self.crop_maps[access].cellsize ** 2
+                    #   If the lookup table is empty for the given crop, set it to the crop map's null value for comparison later.
+                    if lookup_value == '':
+                        lookup_value = self.crop_maps[access].NODATA_VALUE
+                    
+                    current_recharge_cell = float(self.get_adj_cell(smallest_map, self.constant_maps["recharge_in"], i, j))
+
+                    if ((not crop_value == self.crop_maps[access].NODATA_VALUE) and (not lookup_value == self.crop_maps[access].NODATA_VALUE) and (not current_recharge_cell == self.constant_maps["recharge_in"].NODATA_VALUE)):
+                        area = int(self.crop_maps[access].cellsize) ** 2
                         m3_per_day = (current_recharge_cell * .0254 * area) / 365
-                        concentration = float(self.constant_maps["lookup_table"][2])
+                        concentration = float(lookup_value)
                         volume = m3_per_day * 1000
                         mg_nitrate = volume * concentration
                         kgn_year = mg_nitrate * 365 * (10 ** -6)
@@ -162,3 +177,5 @@ class MapHandler:
 
         print("Exited calculation loop with nrows: " + str(len(return_map)) + " and ncols: " + str(len(return_map[0])))
         print("sum_of_MgN: " + str(sum_of_MgN) + "\nsum_of_volume: " + str(sum_of_volume))
+        print(temp_values_found)
+        print(crop_values_found)

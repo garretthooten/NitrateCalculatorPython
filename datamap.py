@@ -16,12 +16,9 @@ class DataMap:
     is_lookup_table = False
 
     def __init__(self, **kwargs):
-        if "file_path" in kwargs:
-            self.directory = kwargs.get("file_path")
-            self.parse_csv(self.directory)
         #   If the map is loaded by stored_map, all other class parameters must be included.
         #   Thus, no checking is necessary (For this really fast implementation)
-        elif "stored_map" in kwargs:
+        if "stored_map" in kwargs:
             self.stored_map = np.array(kwargs.get("stored_map"))
             self.ncols = kwargs.get("ncols")
             self.nrows = kwargs.get("nrows")
@@ -37,6 +34,9 @@ class DataMap:
             print("lookup table set: " + str(self.is_lookup_table))
         if self.is_lookup_table and self.is_travel_time:
             print("ERROR: Invalid desingation of travel time and lookup table. Map invalid")
+        if "file_path" in kwargs and self.stored_map == None:
+            self.directory = kwargs.get("file_path")
+            self.parse_csv(self.directory)
     
     def parse_csv(self, file_path):
         #   load file to stored_map
