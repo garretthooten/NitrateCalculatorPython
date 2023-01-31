@@ -130,6 +130,7 @@ class MapHandler:
         #   Delete this later
         temp_values_found = 0
         crop_values_found = 0
+        values_calculated = 0
 
         for i in range(len(smallest_map.stored_map)):
             inside_temp = []
@@ -156,7 +157,7 @@ class MapHandler:
                     
                     current_recharge_cell = float(self.get_adj_cell(smallest_map, self.constant_maps["recharge_in"], i, j))
 
-                    if ((not crop_value == self.crop_maps[access].NODATA_VALUE) and (not lookup_value == self.crop_maps[access].NODATA_VALUE) and (not current_recharge_cell == self.constant_maps["recharge_in"].NODATA_VALUE)):
+                    if ((not crop_value == self.crop_maps[access].NODATA_VALUE) and (not float(lookup_value) == float(self.crop_maps[access].NODATA_VALUE)) and (not float(current_recharge_cell) == float(self.constant_maps["recharge_in"].NODATA_VALUE))):
                         area = int(self.crop_maps[access].cellsize) ** 2
                         m3_per_day = (current_recharge_cell * .0254 * area) / 365
                         concentration = float(lookup_value)
@@ -166,9 +167,16 @@ class MapHandler:
                         sum_of_MgN += mg_nitrate
                         sum_of_volume += volume
                         inside_temp.append(kgn_year)
+                        values_calculated += 1
 
                     else:
                         inside_temp.append(smallest_map.NODATA_VALUE)
+                        print("Rejected [" + str(i) + "][" + str(j) + "]")
+
+                    if i == 257 and j == 60:
+                        print("rejecting cell [" + str(i) + "][" + str(j) + "]: crop_value - " + str(crop_value) + ", lookup_value - " + str(lookup_value) + ", current_recharge_cell - " + str(current_recharge_cell))
+                        print("(not crop_value == self.crop_maps[access].NODATA_VALUE): " + str((not crop_value == self.crop_maps[access].NODATA_VALUE)) + "\n(not lookup_value == self.crop_maps[access].NODATA_VALUE): " + str((not lookup_value == self.crop_maps[access].NODATA_VALUE)) + "\n(not current_recharge_cell == self.constant_maps[recharge_in].NODATA_VALUE): " + str((not current_recharge_cell == self.constant_maps["recharge_in"].NODATA_VALUE)))
+                        print("self.crops_maps[access].NODATA_VALUE: " + str(self.crop_maps[access].NODATA_VALUE) + ", type: " + str(type(self.crop_maps[access].NODATA_VALUE)) + ", lookup_value type: " + str(type(lookup_value)))
 
                 else:
                     inside_temp.append(smallest_map.NODATA_VALUE)
@@ -179,3 +187,4 @@ class MapHandler:
         print("sum_of_MgN: " + str(sum_of_MgN) + "\nsum_of_volume: " + str(sum_of_volume))
         print(temp_values_found)
         print(crop_values_found)
+        print(values_calculated)
