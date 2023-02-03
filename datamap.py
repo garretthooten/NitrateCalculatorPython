@@ -1,4 +1,5 @@
 import csv
+import pandas as pd
 import numpy as np
 
 class DataMap:
@@ -64,3 +65,36 @@ class DataMap:
             return "ncols: " + str(self.ncols) + "\nnrows: " + str(self.nrows) + "\nxllcorner: " + str(self.xllcorner) + "\nyllcorner: " + str(self.yllcorner) + "\ncellsize: " + str(self.cellsize) + "\nNODATA_VALUE: " + str(self.NODATA_VALUE)
         else:
             return str(self.stored_map)
+
+    def write_to_file(self, dir):
+        #   Convert numpy array stored_map to pandas dataframe
+        df = pd.DataFrame(self.stored_map)
+        #   Use pandas to turn dataframe into csv string
+        map_string = df.to_csv(index=False, header=False)
+
+        #   Add formated parameters to parameters_string
+        parameters_string = ""
+        #   Fills the rest of the line with commas and starts the next line
+        def fill_line_with_commas():
+            nonlocal parameters_string
+            for i in range(self.ncols - 2):
+                parameters_string += ","
+            parameters_string += "\n"
+        parameters_string += "ncols," + str(self.ncols) + ","
+        fill_line_with_commas()
+        parameters_string += "nrows," + str(self.nrows) + ","
+        fill_line_with_commas()
+        parameters_string += "xllcorner," + str(self.xllcorner) + ","
+        fill_line_with_commas()
+        parameters_string += "yllcorner," + str(self.yllcorner) + ","
+        fill_line_with_commas()
+        parameters_string += "xllcorner," + str(self.xllcorner) + ","
+        fill_line_with_commas()
+        parameters_string += "cellsize," + str(self.cellsize) + ","
+        fill_line_with_commas()
+        parameters_string += "NODATA_VALUE," + str(self.NODATA_VALUE) + ","
+        fill_line_with_commas()
+
+        file = open(dir, "w")
+        file.writelines([parameters_string, map_string])
+        

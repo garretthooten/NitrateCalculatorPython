@@ -178,8 +178,12 @@ class MapHandler:
 
             return_map.append(inside_temp)
 
+        return_datamap = datamap.DataMap(stored_map = return_map, ncols = len(return_map[0]), nrows = len(return_map), xllcorner = smallest_map.xllcorner, yllcorner = smallest_map.yllcorner, cellsize = smallest_map.cellsize, NODATA_VALUE = smallest_map.NODATA_VALUE)
+
         print("Exited calculation loop with nrows: " + str(len(return_map)) + " and ncols: " + str(len(return_map[0])))
         print("sum_of_MgN: " + str(sum_of_MgN) + "\nsum_of_volume: " + str(sum_of_volume))
         print(temp_values_found)
         print(crop_values_found)
         print(values_calculated)
+
+        return return_datamap
